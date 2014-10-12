@@ -1,0 +1,74 @@
+<xml>
+
+	<set name="HXCPP_CPP11" value="1" />
+
+	<include name="${HXCPP}/build-tool/BuildCommon.xml" />
+
+	<set name="OUTPUT_DIR" value="../ndll" unless="OUTPUT_DIR" />
+
+	<files id="hxgtk">
+		<compilerflag value="-ggdb" if="fulldebug" />
+		
+		<section if="linux">
+			<compilerflag value="-I/usr/include/gtk-2.0" />
+			<compilerflag value="-I/usr/include/gtkglext-1.0" />
+			<compilerflag value="-I/usr/lib64/gtk-2.0/include" />
+			<compilerflag value="-I/usr/lib64/gtkglext-1.0/include" />
+			<compilerflag value="-I/usr/include/pango-1.0" />
+			<compilerflag value="-I/usr/include/atk-1.0" />
+			<compilerflag value="-I/usr/include/cairo" />
+			<compilerflag value="-I/usr/include/pixman-1" />
+			<compilerflag value="-I/usr/include/libdrm" />
+			<compilerflag value="-I/usr/include/libpng12" />
+			<compilerflag value="-I/usr/include/gdk-pixbuf-2.0" />
+			<compilerflag value="-I/usr/include/libpng16" />
+			<compilerflag value="-I/usr/include/pango-1.0" />
+			<compilerflag value="-I/usr/include/harfbuzz" />
+			<compilerflag value="-I/usr/include/pango-1.0" />
+			<compilerflag value="-I/usr/include/glib-2.0" />
+			<compilerflag value="-I/usr/lib64/glib-2.0/include" />
+			<compilerflag value="-I/usr/include/freetype2" />
+			<compilerflag value="-DGL_GLEXT_PROTOTYPES" />
+		</section>
+
+		<file name="src/hxgtk.cpp" />
+	</files>
+
+	<set name="DEBUGEXTRA" value="-debug" if="fulldebug" />
+
+	<target id="default" output="hxgtk${DEBUGEXTRA}${LIBEXTRA}" tool="linker" toolid="${STD_MODULE_LINK}">
+		<outdir name="${OUTPUT_DIR}/${BINDIR}" />
+
+		<files id="hxgtk" />
+
+		<section>
+			<ext value=".ndll" />
+
+			<section if="windows">
+			</section>
+
+			<section if="linux">
+				<lib name="-lgtk-x11-2.0" />
+				<lib name="-lgdk-x11-2.0" />
+				<lib name="-lpangocairo-1.0" />
+				<lib name="-latk-1.0" />
+				<lib name="-lcairo" />
+				<lib name="-lgdk_pixbuf-2.0" />
+				<lib name="-lgio-2.0" />
+				<lib name="-lpangoft2-1.0" />
+				<lib name="-lpango-1.0" />
+				<lib name="-lgobject-2.0" />
+				<lib name="-lglib-2.0" />
+				<lib name="-lfontconfig" />
+				<lib name="-lfreetype" />
+				<lib name="-lgtkglext-x11-1.0" />
+				<lib name="-lgdkglext-x11-1.0" />
+				<lib name="-lGL" />
+			</section>
+
+			<section if="mac">
+			</section>
+		</section>
+	</target>
+
+</xml>
