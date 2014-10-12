@@ -22,8 +22,9 @@ _the samples come from [lime](https://github.com/openfl/lime) and [openfl](https
 
 You need a custom lime and openfl:
 ```bash
-git clone https://github.com/ibilon/openfl.git -b lime
+git clone --recursive https://github.com/ibilon/lime.git -b embed
 haxelib dev lime lime
+lime rebuild tools
 
 git clone https://github.com/ibilon/openfl.git -b embed
 haxelib dev openfl openfl
@@ -31,7 +32,7 @@ haxelib dev openfl openfl
 
 Then in each sample directory run:
 ```bash
-lime build neko -Dnext -embed -debug
+lime build neko -Dnext -embed
 ```
 
 To revert to normal lime and openfl run:
@@ -45,6 +46,8 @@ haxelib dev openfl
 ```bash
 haxe build.hxml
 ```
+
+You can change the sample that will be loaded in [Main.hx line 76](https://github.com/ibilon/lime-gtk/blob/master/Main.hx#L76).
 
 ## Licence
 
