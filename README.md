@@ -18,6 +18,7 @@ You need development libraries for:
 * Their dependencies
 
 ## Compiling the samples
+_the samples come from [lime](https://github.com/openfl/lime) and [openfl](https://github.com/openfl/openfl)_
 
 You need a custom lime and openfl:
 ```bash
