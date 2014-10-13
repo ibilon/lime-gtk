@@ -30,7 +30,12 @@ git clone https://github.com/ibilon/openfl.git -b embed
 haxelib dev openfl openfl
 ```
 
-Then in each sample directory run:
+Then run:
+```bash
+sh buildSamples.sh
+```
+
+Or alternatively in each sample directory run:
 ```bash
 lime build neko -Dnext -embed
 ```
@@ -47,7 +52,7 @@ haxelib dev openfl
 haxe build.hxml
 ```
 
-You can change the sample that will be loaded in [Main.hx line 76](https://github.com/ibilon/lime-gtk/blob/master/Main.hx#L76).
+Then click on the button of the sample you want to load.
 
 ## Licence
 

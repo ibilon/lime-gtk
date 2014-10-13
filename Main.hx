@@ -2,6 +2,8 @@ import hxgtk.*;
 
 class Main
 {
+	static var appLoaded : Bool = false;
+	
 	@:access(hxgtk.GdkGLDrawable)
 	@:access(lime.app.Application)
 	public static function expose (da:GtkWidget) : Bool
@@ -15,13 +17,9 @@ class Main
 		}
 
 		// draw		
-		if (app == null)
+		if (!appLoaded)
 		{
 			Ndll.clearScreen();
-			
-			loadApp(da.width, da.height);			
-			
-			G.timeoutAdd(1000 / 60, update.bind(da));
 		}
 		
 		gldrawable.swap();
@@ -43,7 +41,7 @@ class Main
 		}
 		
 		// update		
-		if (app != null && appInstance != null)
+		if (appLoaded)
 		{
 			try
 			{
@@ -52,6 +50,8 @@ class Main
 			catch (e:Dynamic)
 			{
 				trace('Update triggerFrame error: $e');
+				trace(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
+				appLoaded = false;
 			}
 		}
 		else
@@ -69,22 +69,16 @@ class Main
 		return true;
 	}
 	
-	public static function loadApp (width:Int, height:Int) : Void
+	public static function loadApp (da:GtkWidget, name:String) : Void
 	{
-		trace("Loading app");
-		
-		//~ var name = "SimpleImage";
-		//~ var name = "BunnyMark";
-		//~ var name = "SimpleAudio";
-		//~ var name = "DisplayingABitmap";
-		var name = "PlayingSound";
-		//~ var name = "PiratePig";
-		//~ var name = "AddingAnimation";
-		//~ var name = "ActuateExample";
+		label.text = 'Loading sample "$name"';
 		
 		try
 		{
+			cleanAudio();
+			
 			var path = 'samples/$name/Export/linux64/neko/bin/';
+			Sys.setCwd(cwd);
 			Sys.setCwd(path);
 			
 			var nl = new neko.vm.Loader(untyped $loader);
@@ -92,59 +86,76 @@ class Main
 			
 			app.execute();
 			
-			app.getGlobal(0)(width, height);
+			app.getGlobal(0)(da.width, da.height);
 			
 			appInstance = app.getGlobal(0);
 			
 			audioClean = app.getGlobal(1);
 			
-			trace("App loaded");
+			appLoaded = true;
+			
+			label.text = 'Sample "$name" loaded';
 		}
 		catch (e:Dynamic)
 		{
 			trace('Error durring app load: $e');
-			untyped app = -1;
 		}
 	}
 	
 	static var audioClean : Void->Void;
 	
 	public static function main ()
-	{	
+	{		
 		var name = "Test Lime Embed";
 		Gtk.init(name);
 		GtkGl.init(name);
 
 		var window = new GtkWindow(GtkWindow.TOPLEVEL);
 		window.setDefaultSize(800, 600);
+		window.connect("destroy", quit);
 		
-		var da = new GtkDrawingArea();
-		window.connect("destroy", Gtk.mainQuit);
+		var mainvbox = new GtkVbox(false, 2);
+		window.add(mainvbox);
+		mainvbox.show();
 		
 		var hbox = new GtkHbox(false, 10);
-		window.add(hbox);
+		mainvbox.packStart(hbox, true, true, 2);
 		hbox.show();
 		
-		hbox.packStart(da, true, true, 2);
+		var vbox_left = new GtkVbox(false, 10);
+		hbox.packStart(vbox_left, true, true, 2);
+		vbox_left.show();
 		
-		da.setEvents(Gdk.EXPOSURE_MASK);
-		
-		var vbox = new GtkVbox(false, 10);
-		hbox.packEnd(vbox, false, false, 2);
-		
-		var samples = ["SimpleImage", "BunnyMark", "SimpleAudio", "DisplayingABitmap", "PlayingSound", "PiratePig", "AddingAnimation", "ActuateExample"];
-		
-		// Create a button to which to attach menu as a popup
-		for (s in samples)
+		var hbox_commands = new GtkHbox(false, 10);
+		for (b in ["pause", "play", "next frame"])
 		{
-			var button = new GtkButton(s);
-			button.connect("clicked", button_clicked.bind(s));
-			vbox.packEnd(button, false, false, 2);
+			var button = new GtkButton(b);
+			//~ button.connect("clicked", );
+			hbox_commands.packStart(button, false, false, 2);
 			button.show();
 		}
+		vbox_left.packStart(hbox_commands, false, false, 2);
+		hbox_commands.show();
 		
-		vbox.show();
-		window.show();
+		var da = new GtkDrawingArea();
+		da.setEvents(Gdk.EXPOSURE_MASK);
+		vbox_left.packStart(da, true, true, 2);
+		da.show();	
+		
+		var vbox_right = new GtkVbox(false, 10);
+		for (s in ["SimpleImage", "BunnyMark", "SimpleAudio", "DisplayingABitmap", "PlayingSound", "PiratePig", "AddingAnimation", "ActuateExample"])
+		{
+			var button = new GtkButton(s);
+			button.connect("clicked", loadApp.bind(da, s));
+			vbox_right.packStart(button, false, false, 2);
+			button.show();
+		}		
+		hbox.packStart(vbox_right, false, false, 2);
+		vbox_right.show();
+		
+		label = new GtkLabel("Lime Gtk+");
+		mainvbox.packStart(label, false, true, 2);
+		label.show();
 
 		// prepare GL
 		
@@ -160,41 +171,63 @@ class Main
 			throw "setGlCapability failed";
 		}
 		
-		da.connectExpose(expose.bind(da));
-		
+		window.show();
 		window.showAll();
 		
-		try
-		{
-			Gtk.main();
-		}
-		catch (e:Dynamic)
-		{
-			trace('error: $e');
-			trace(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
+		var startTime = 0.0;
+		var sleepTime = 0.0;
 		
-			if (audioClean != null)
-			{
-				audioClean();
+		while (true)
+		{
+			try
+			{				
+				while (Gtk.eventsPending())
+				{
+					Gtk.mainIteration();
+				}
+				
+				startTime = Ndll.getTime();
+				
+				update(da);
+				
+				sleepTime = startTime + 0.016 - Ndll.getTime();
+				
+				if (sleepTime > 0.001)
+				{
+					Sys.sleep(sleepTime);
+				}
 			}
-			else if (app != null)
+			catch (e:Dynamic)
 			{
-				trace("Didn't get audio clean method");
+				trace('error: $e');
+				trace(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 			}
 		}
 		
+		quit();
+	}
+	
+	static function quit ()
+	{
+		cleanAudio();
+		
+		Sys.exit(0);
+	}
+	
+	static function cleanAudio ()
+	{
 		if (audioClean != null)
 		{
 			audioClean();
 		}
-		else if (app != null)
+		else if (appLoaded)
 		{
 			trace("Didn't get audio clean method");
 		}
 	}
 	
-	static function button_clicked (name:String) { trace('button clicked $name'); }
-	
 	static var app : neko.vm.Module;
 	static var appInstance : lime.app.Application;
+	static var cwd = Sys.getCwd();
+	static var label : GtkLabel;
 }

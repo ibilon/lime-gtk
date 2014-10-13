@@ -7,6 +7,8 @@
 
 #include <GL/gl.h>
 
+#include <time.h>
+
 
 value hx_clearScreen ()
 {	
@@ -16,6 +18,16 @@ value hx_clearScreen ()
 	return alloc_null();
 }
 DEFINE_PRIM (hx_clearScreen, 0);
+
+
+value hx_getTime ()
+{	
+	clock_t c = clock();
+	float f = (float)c / CLOCKS_PER_SEC;
+	
+	return alloc_float(f);
+}
+DEFINE_PRIM (hx_getTime, 0);
 
 
 value hx_GdkGLDrawable_swap (value handle)
@@ -56,6 +68,20 @@ value hx_GtkGl_init (value args)
 	return alloc_null();
 }
 DEFINE_PRIM (hx_GtkGl_init, 1);
+
+
+value hx_Gtk_eventsPending ()
+{
+	return alloc_bool(gtk_events_pending() == TRUE);
+}
+DEFINE_PRIM (hx_Gtk_eventsPending, 0);
+
+
+value hx_Gtk_mainIteration ()
+{
+	return alloc_bool(gtk_main_iteration() == TRUE);
+}
+DEFINE_PRIM (hx_Gtk_mainIteration, 0);
 
 
 value hx_Gtk_main ()
@@ -302,6 +328,38 @@ value hx_GtkWidget_setGlCapability (value handle, value configh, value a, value 
 	return alloc_bool(result);
 }
 DEFINE_PRIM (hx_GtkWidget_setGlCapability, 5);
+
+
+value hx_GtkLabel_new (value text)
+{
+	GtkWidget* label = gtk_label_new(val_string(text));
+	
+	return alloc_float((intptr_t)label);
+}
+DEFINE_PRIM (hx_GtkLabel_new, 1);
+
+
+value hx_GtkLabel_getText (value handle)
+{
+	GtkLabel* label = (GtkLabel*)(intptr_t)val_float(handle);
+	char** text;
+	
+	gtk_label_get(label, text);
+	
+	return alloc_string(*text);
+}
+DEFINE_PRIM (hx_GtkLabel_getText, 1);
+
+
+value hx_GtkLabel_setText (value handle, value text)
+{
+	GtkLabel* label = (GtkLabel*)(intptr_t)val_float(handle);
+	
+	gtk_label_set_text(label, val_string(text));
+	
+	return alloc_null();
+}
+DEFINE_PRIM (hx_GtkLabel_setText, 2);
 
 
 value hx_GtkButton_new (value label)
