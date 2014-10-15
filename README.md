@@ -30,15 +30,7 @@ git clone https://github.com/ibilon/openfl.git -b embed
 haxelib dev openfl openfl
 ```
 
-Then run:
-```bash
-sh buildSamples.sh
-```
-
-Or alternatively in each sample directory run:
-```bash
-lime build neko -Dnext -embed
-```
+The samples are rebuild automatically when loading them in the application.
 
 To revert to normal lime and openfl run:
 ```bash
